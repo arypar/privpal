@@ -39,7 +39,7 @@ export function SendTransaction() {
   const [isOpen, setIsOpen] = useState(false);
   const [address, setAddress] = useState("");
   const [amount, setAmount] = useState("");
-  const [step, setStep] = useState<"form" | "sign" | "success" | "deposit">("form");
+  const [step, setStep] = useState<"form" | "sign" | "deposit">("form");
   const [isLoading, setIsLoading] = useState(false);
   const [signedHash, setSignedHash] = useState<string>("");
   const [transactionHash, setTransactionHash] = useState<string>("");
@@ -123,10 +123,13 @@ export function SendTransaction() {
             title: "Deposit Successful! 💎",
             description: `Successfully deposited ${depositAmount} PYUSD to the contract.`,
           });
+          
+          // Trigger refresh of API balance after deposit
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('refreshUserBalance'));
+          }, 2000); // Give API time to update
         }
-        setStep("success");
-        setIsLoading(false);
-        setIsWithdrawing(false);
+        resetForm();
         refetchBalance();
         refetchAllowance();
       }
@@ -166,22 +169,22 @@ export function SendTransaction() {
           title: "Transaction Authorized! ✅",
           description: `Successfully authorized ${amount} PYUSD transfer to ${address.slice(0, 6)}...${address.slice(-4)}`,
         });
-        setStep("success");
+        resetForm();
       } else {
         toast({
           variant: "error",
           title: "API Submission Failed",
           description: result.error,
         });
-        setStep("success"); 
+        resetForm(); 
       }
     } catch (error) {
-      toast({
-        variant: "error",
-        title: "Submission Error",
-        description: "Failed to submit transaction to API. Signature was still successful.",
-      });
-      setStep("success"); 
+              toast({
+          variant: "error",
+          title: "Submission Error",
+          description: "Failed to submit transaction to API. Signature was still successful.",
+        });
+        resetForm(); 
     } finally {
       setIsLoading(false);
     }
@@ -407,7 +410,7 @@ export function SendTransaction() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>
-                {step === "form" ? "Send PYUSD" : step === "sign" ? "Sign Authorization" : "Signature Complete"}
+                {step === "form" ? "Send PYUSD" : "Sign Authorization"}
               </DialogTitle>
             </DialogHeader>
             {step === "form" ? (
@@ -450,7 +453,7 @@ export function SendTransaction() {
                   </Button>
                 </div>
               </div>
-            ) : step === "sign" ? (
+            ) : (
               <div className="space-y-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-600 mb-2">Please sign this message to authorize the transaction:</p>
@@ -476,55 +479,13 @@ export function SendTransaction() {
                   </Button>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {transactionHash ? "Transaction Successful!" : "Message Signed Successfully!"}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {transactionHash ? 
-                      (isWithdrawing ? "Successfully withdrew from contract" : `Deposited ${depositAmount || '1'} PYUSD to contract`) :
-                      `Authorization for ${amount} PYUSD to ${address.slice(0, 6)}...${address.slice(-4)}`
-                    }
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-2">
-                    {transactionHash ? "Transaction Hash:" : "Signed Hash:"}
-                  </p>
-                  <div className="bg-white p-3 rounded border font-mono text-xs text-gray-900 break-all">
-                    {transactionHash || signedHash}
-                  </div>
-                </div>
-                <div className="flex space-x-2 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => navigator.clipboard.writeText(transactionHash || signedHash)}
-                    className="flex-1"
-                  >
-                    Copy Hash
-                  </Button>
-                  <Button
-                    onClick={resetForm}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  >
-                    Done
-                  </Button>
-                </div>
-              </div>
             )}
           </DialogContent>
         </Dialog>
         <Dialog open={isDepositOpen} onOpenChange={setIsDepositOpen}>
           <DialogTrigger asChild>
             <Button 
-              disabled={isLoading || isContractPending || isConfirming || !hasBalance}
+              disabled={isLoading || isContractPending || (isConfirming && !isWithdrawing) || !hasBalance}
               className="bg-green-600 hover:bg-green-700 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 relative overflow-hidden group disabled:hover:scale-100 disabled:hover:shadow-none"
             >
               <span className="relative z-10">
@@ -578,7 +539,7 @@ export function SendTransaction() {
         </Dialog>
         <Button 
           onClick={handleWithdraw}
-          disabled={isLoading || isContractPending || isConfirming}
+          disabled={isLoading || isContractPending || (isConfirming && isWithdrawing)}
           className="mysterious-button bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 relative overflow-hidden group disabled:hover:scale-100 disabled:hover:shadow-none border border-purple-500/50"
         >
           <span className="relative z-10 font-mono">

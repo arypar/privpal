@@ -6,10 +6,14 @@ import { GlitchTitle } from "@/components/GlitchTitle";
 import { ConstantGlitchLogo } from "@/components/GlitchText";
 import { MerkleRecomputeIndicator } from "@/components/MerkleRecomputeIndicator";
 import { UserBalanceBox } from "@/components/UserBalanceBox";
+import { FloatingLogos } from "@/components/FloatingLogos";
 export default function Home() {
   return (
     <WalletProvider>
       <div className="relative min-h-screen bg-black">
+        {/* Floating PayPal logos background */}
+        <FloatingLogos />
+        
         <div className="relative z-10 grid grid-rows-[auto_1fr_auto] min-h-screen px-4 sm:px-1 font-[family-name:var(--font-geist-sans)]">
           <NavigationHeader />
           <div className="flex flex-col items-center justify-center space-y-6 py-8">

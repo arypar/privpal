@@ -44,7 +44,7 @@ export function MerkleRecomputeIndicator({ className = "" }: MerkleRecomputeIndi
   });
 
   // Get contract balance for additional info
-  const { data: contractBalance } = useReadContract({
+  const { data: contractBalance, refetch: refetchBalance } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
     functionName: 'getContractBalance',
@@ -71,6 +71,7 @@ export function MerkleRecomputeIndicator({ className = "" }: MerkleRecomputeIndi
         setIsRecomputing(true);
         setLastUpdate(now);
         refetchMerkleRoot(); // Refresh the merkle root
+        refetchBalance(); // Also refresh pool balance
         
         // Stop recomputing after 3 seconds
         setTimeout(() => {
@@ -82,7 +83,18 @@ export function MerkleRecomputeIndicator({ className = "" }: MerkleRecomputeIndi
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [refetchMerkleRoot]);
+  }, [refetchMerkleRoot, refetchBalance]);
+
+  // Listen for deposit events to refresh pool balance immediately
+  useEffect(() => {
+    const handleRefresh = () => {
+      refetchBalance();
+      refetchMerkleRoot();
+    };
+
+    window.addEventListener('refreshUserBalance', handleRefresh);
+    return () => window.removeEventListener('refreshUserBalance', handleRefresh);
+  }, [refetchBalance, refetchMerkleRoot]);
 
   const formatMerkleRoot = (root: string | undefined) => {
     if (!root || typeof root !== 'string') return "0x0000000000000000000000000000000000000000000000000000000000000000";

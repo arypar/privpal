@@ -78,16 +78,26 @@ export function UserBalanceBox({ className = "" }: UserBalanceBoxProps) {
     fetchBalance();
   }, [userAddress, isConnected]);
 
-  // Auto-refresh balance every 30 seconds
+  // Auto-refresh balance every 1 second for real-time updates
   useEffect(() => {
     if (!isConnected || !userAddress) return;
 
     const interval = setInterval(() => {
       fetchBalance();
-    }, 30000); // 30 seconds
+    }, 1000); // 1 second
 
     return () => clearInterval(interval);
   }, [userAddress, isConnected]);
+
+  // Listen for manual refresh events from other components
+  useEffect(() => {
+    const handleRefresh = () => {
+      fetchBalance(true); // Show refresh animation
+    };
+
+    window.addEventListener('refreshUserBalance', handleRefresh);
+    return () => window.removeEventListener('refreshUserBalance', handleRefresh);
+  }, []);
 
 
 
