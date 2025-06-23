@@ -5,6 +5,7 @@ import { SendTransaction } from "@/components/SendTransaction";
 import { GlitchTitle } from "@/components/GlitchTitle";
 import { ConstantGlitchLogo } from "@/components/GlitchText";
 import { MerkleRecomputeIndicator } from "@/components/MerkleRecomputeIndicator";
+import { UserBalanceBox } from "@/components/UserBalanceBox";
 export default function Home() {
   return (
     <WalletProvider>
@@ -31,9 +32,10 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Spectacular Merkle Recompute Indicator */}
-            <div className="w-full max-w-4xl">
-              <MerkleRecomputeIndicator className="mb-8" />
+            {/* User Balance and Merkle Status */}
+            <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <UserBalanceBox />
+              <MerkleRecomputeIndicator />
             </div>
             
             <SendTransaction />

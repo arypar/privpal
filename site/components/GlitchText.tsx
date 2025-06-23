@@ -14,7 +14,9 @@ export function GlitchText({
   changeSpeed = 50,
   constantGlitch = false 
 }: GlitchTextProps) {
-  const [displayText, setDisplayText] = useState(children);
+  // Ensure children is always a string
+  const safeChildren = typeof children === 'string' ? children : String(children || '');
+  const [displayText, setDisplayText] = useState(safeChildren);
   const [isGlitching, setIsGlitching] = useState(constantGlitch);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const glitchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -37,7 +39,9 @@ export function GlitchText({
     '0', '1', 'X', 'F', 'E', 'A', 'B', 'C', 'D'
   ];
   const corruptText = (text: string, intensity: number): string => {
-    return text.split('').map(char => {
+    // Ensure text is a string
+    const safeText = typeof text === 'string' ? text : String(text || '');
+    return safeText.split('').map(char => {
       if (char === ' ') return ' '; // Preserve spaces
       if (Math.random() < intensity) {
         return glitchChars[Math.floor(Math.random() * glitchChars.length)];
@@ -49,7 +53,7 @@ export function GlitchText({
     if (intervalRef.current) return; // Already glitching
     setIsGlitching(true);
     intervalRef.current = setInterval(() => {
-      setDisplayText(corruptText(children, glitchIntensity));
+      setDisplayText(corruptText(safeChildren, glitchIntensity));
     }, changeSpeed);
   };
   const stopGlitching = () => {
@@ -58,7 +62,7 @@ export function GlitchText({
       intervalRef.current = null;
     }
     setIsGlitching(false);
-    setDisplayText(children); // Reset to original text
+    setDisplayText(safeChildren); // Reset to original text
   };
   useEffect(() => {
     if (constantGlitch) {
@@ -87,11 +91,11 @@ export function GlitchText({
         clearTimeout(glitchTimeoutRef.current);
       }
     };
-  }, [children, glitchIntensity, changeSpeed, constantGlitch]);
+      }, [safeChildren, glitchIntensity, changeSpeed, constantGlitch]);
   return (
     <span className={`${className} relative inline-block`}>
       {/* Original text - always visible */}
-      <span className="relative z-10">{children}</span>
+      <span className="relative z-10">{safeChildren}</span>
       {/* Glitch layers that appear on top */}
       {isGlitching && (
         <>

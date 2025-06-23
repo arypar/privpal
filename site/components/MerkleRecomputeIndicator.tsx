@@ -54,10 +54,20 @@ export function MerkleRecomputeIndicator({ className = "" }: MerkleRecomputeIndi
     const updateTimer = () => {
       const now = new Date();
       const seconds = now.getSeconds();
-      setTimeLeft(70 - seconds); // Count down from 70 to trigger at :10
       
-      // Trigger recompute at :10 seconds (when seconds = 10)
-      if (seconds === 10) {
+      // Calculate time left until next :15 second mark (60 seconds cycle)
+      let timeLeft;
+      if (seconds < 15) {
+        // Before :15, count down to :15 of current minute
+        timeLeft = 15 - seconds;
+      } else {
+        // After :15, count down to :15 of next minute (max 60 seconds)
+        timeLeft = (60 + 15) - seconds;
+      }
+      setTimeLeft(timeLeft);
+      
+      // Trigger recompute at :15 seconds (when seconds = 15)
+      if (seconds === 15) {
         setIsRecomputing(true);
         setLastUpdate(now);
         refetchMerkleRoot(); // Refresh the merkle root
@@ -75,7 +85,7 @@ export function MerkleRecomputeIndicator({ className = "" }: MerkleRecomputeIndi
   }, [refetchMerkleRoot]);
 
   const formatMerkleRoot = (root: string | undefined) => {
-    if (!root) return "0x0000000000000000000000000000000000000000000000000000000000000000";
+    if (!root || typeof root !== 'string') return "0x0000000000000000000000000000000000000000000000000000000000000000";
     return root; // Return the full hash without truncation
   };
 
@@ -127,7 +137,7 @@ export function MerkleRecomputeIndicator({ className = "" }: MerkleRecomputeIndi
                 </GlitchText>
               ) : (
                 <GlitchText glitchIntensity={0.02}>
-                  {timeLeft}s
+                  {Math.floor(timeLeft) + "s"}
                 </GlitchText>
               )}
             </span>
@@ -135,16 +145,16 @@ export function MerkleRecomputeIndicator({ className = "" }: MerkleRecomputeIndi
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-slate-800/50 rounded-full h-2 overflow-hidden">
-          <div 
-            className={`h-full transition-all duration-1000 ${
-              isRecomputing 
-                ? 'bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 animate-pulse'
-                : 'bg-gradient-to-r from-blue-500 to-green-500'
-            }`}
-            style={{ width: `${((70 - timeLeft) / 70) * 100}%` }}
-          />
-        </div>
+                 <div className="w-full bg-slate-800/50 rounded-full h-2 overflow-hidden">
+           <div 
+             className={`h-full transition-all duration-1000 ${
+               isRecomputing 
+                 ? 'bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 animate-pulse'
+                 : 'bg-gradient-to-r from-blue-500 to-green-500'
+             }`}
+             style={{ width: `${((60 - timeLeft) / 60) * 100}%` }}
+           />
+         </div>
 
         {/* Merkle Root Display */}
         <div className="space-y-2">
@@ -178,7 +188,7 @@ export function MerkleRecomputeIndicator({ className = "" }: MerkleRecomputeIndi
           <div className="space-y-1">
             <div className="text-slate-500">Network:</div>
             <div className="text-slate-300">
-              <GlitchText glitchIntensity={0.01}>Ethereum</GlitchText>
+              <GlitchText glitchIntensity={0.01}>Ethereum Sepolia</GlitchText>
             </div>
           </div>
           <div className="space-y-1">
